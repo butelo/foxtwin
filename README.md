@@ -1,11 +1,12 @@
-# gemini-firefox
+# foxtwin
 
-Talk to **gemini.google.com** from Node using your **Firefox** cookies.
-No API key. No Chrome. Zero external dependencies (Node built-ins only).
+**foxtwin** talks to the Gemini web app from Node using your Firefox session
+cookies — no API key, no Chrome, zero external dependencies (Node built-ins only).
 
-It reverse-engineers Gemini's internal web API: reads your signed-in session
-cookies from Firefox's plaintext `cookies.sqlite`, then POSTs to the same
-`StreamGenerate` endpoint the web UI uses.
+The name nods to the **fox** (Firefox) and the **twins** (Gemini) without using
+either trademark. It reverse-engineers the web app's internal API: reads your
+signed-in cookies from Firefox's plaintext `cookies.sqlite`, then POSTs to the
+same `StreamGenerate` endpoint the web UI uses.
 
 ## Requirements
 

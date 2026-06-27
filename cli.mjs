@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * gemini-firefox — talk to gemini.google.com using your Firefox cookies. No API key.
+ * foxtwin — talk to gemini.google.com using your Firefox cookies. No API key.
  *
  * Usage:
  *   node cli.mjs "your prompt"
@@ -47,7 +47,7 @@ function parseArgs(argv) {
   return opts;
 }
 
-const HELP = `gemini-firefox — talk to gemini.google.com using your Firefox cookies.
+const HELP = `foxtwin — talk to gemini.google.com using your Firefox cookies.
 
 Usage:
   node cli.mjs "your prompt"

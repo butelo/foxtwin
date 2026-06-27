@@ -1,5 +1,5 @@
 {
-  "name": "gemini-firefox",
+  "name": "foxtwin",
   "version": "1.0.0",
   "description": "Talk to gemini.google.com from Node using your Firefox cookies. No API key, no Chrome, zero dependencies. Inspired by steipete/oracle.",
   "type": "module",
@@ -7,11 +7,11 @@
   "author": "butelo",
   "repository": {
     "type": "git",
-    "url": "https://github.com/butelo/gemini-firefox"
+    "url": "https://github.com/butelo/foxtwin"
   },
   "keywords": ["gemini", "firefox", "cookies", "google", "cli", "reverse-engineering"],
   "bin": {
-    "gemini-firefox": "cli.mjs"
+    "foxtwin": "cli.mjs"
   },
   "engines": {
     "node": ">=22"
