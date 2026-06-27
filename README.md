@@ -1,0 +1,124 @@
+# gemini-firefox
+
+Talk to **gemini.google.com** from Node using your **Firefox** cookies.
+No API key. No Chrome. Zero external dependencies (Node built-ins only).
+
+It reverse-engineers Gemini's internal web API: reads your signed-in session
+cookies from Firefox's plaintext `cookies.sqlite`, then POSTs to the same
+`StreamGenerate` endpoint the web UI uses.
+
+## Requirements
+
+- **Node 22+** (uses the built-in `node:sqlite`).
+- **Firefox** installed, signed into `gemini.google.com` in the profile you use.
+
+## Usage
+
+```bash
+# Text
+node cli.mjs "Explain closures in JavaScript"
+
+# Pick a model
+node cli.mjs --model gemini-3.5-flash "draft a haiku"
+
+# Use a specific Firefox container (e.g. your Pro/Advanced account)
+node cli.mjs --container 2 "Say OK."
+
+# Generate an image (writes a file) — needs a Pro/Advanced account container
+node cli.mjs --container 2 --generate-image out.jpg --aspect 1:1 "a cute robot holding a banana"
+
+# Edit an image
+node cli.mjs --edit-image in.png --output out.jpg "add sunglasses"
+
+# Attach a PDF and ask about it — needs a Pro/Advanced account container
+node cli.mjs --container 2 --file document.pdf "summarize this"
+```
+
+## Options
+
+| Flag | Description |
+|---|---|
+| `--model <id>` | `gemini-3.1-pro` (default), `gemini-3.5-flash`, `gemini-3.1-flash-lite`, `gemini-3-deep-think` |
+| `--profile <dir\|name>` | Firefox profile dir or name (auto-detected otherwise) |
+| `--container <id>` | Firefox Multi-Account Container `userContextId` (e.g. `2`) |
+| `--generate-image <path>` | Write a generated image to this path |
+| `--edit-image <path>` | Input image to edit |
+| `--output <path>` | Output path for edited images |
+| `--aspect <ratio>` | Aspect ratio hint, e.g. `1:1` |
+| `--show-thoughts` | Include the model's thinking in output |
+| `--file <path>` | Attach a file (repeatable) |
+
+Env fallbacks: `GEMINI_MODEL`, `FIREFOX_PROFILE`, `FIREFOX_CONTAINER`.
+
+## Firefox containers
+
+If you keep your Google session in a Firefox **Multi-Account Container**
+(common if you separate personal/work accounts), pass `--container <id>` so
+the right session's cookies are read. Your Pro/Advanced Gemini account is
+typically the one where image generation works — point `--container` at it.
+
+The tool auto-detects your `*.default-release` profile; use `--profile` for a
+specific one.
+
+## What works
+
+| Feature | Status |
+|---|---|
+| Text chat | ✅ |
+| Image generation (`--generate-image`) | ✅ (Pro container) |
+| Image editing (`--edit-image`) | ✅ (Pro container) |
+| **PDF attachment + Q&A** (`--file doc.pdf`) | ✅ (Pro container) |
+| Image attachment + analysis (`--file photo.jpg`) | ❌ (streaming limitation — see Notes) |
+
+File **analysis** (PDFs, images) requires a **Pro/Advanced account container**;
+the free/default container returns error `1100` for attachments. PDF analysis
+works end-to-end. Image-file analysis currently fails because Gemini streams
+that response over a long-held connection that Node's `fetch` terminates early
+(the live web UI receives the full stream). PDFs complete in a single batch and
+come through.
+
+## How it works
+
+1. **Cookies** — copies Firefox's `cookies.sqlite` to a temp dir (Firefox holds
+   a WAL lock), reads the `google.com` auth cookies via `node:sqlite`.
+2. **Bootstrap** — `GET /app` scrapes the session tokens (`SNlM0e`, `cfb2h`,
+   `FdrFJe`) embedded in the HTML.
+3. **Generate** — `POST StreamGenerate` with a sparse `f.req` payload, a
+   model-selector header, and `rt=c` streaming.
+4. **Parse** — decodes Google's length-prefixed framing and extracts the
+   candidate text / thoughts / image URLs.
+5. **Images** — downloads generated images via authenticated `gg-dl` redirects.
+
+## Files
+
+- `src/firefoxCookies.mjs` — Firefox cookie extraction
+- `src/gemini.mjs` — the Gemini web client (request + parse + image download)
+- `cli.mjs` — command-line runner
+
+## Notes
+
+- This is an unofficial reverse-engineered client. Google can change the
+  internal API at any time; model hashes (`src/gemini.mjs`) may need refreshing.
+- Image generation and file analysis require a Gemini **Pro/Advanced** account —
+  use the container whose session has those features in the web UI.
+- **Image-file analysis** (`--file photo.jpg "describe this"`) is not yet
+  supported: Gemini streams that response over a long-lived connection and
+  Node's built-in `fetch` (undici) closes it before the answer frames arrive.
+  The maintained Python reference (`HanaokaYuzu/Gemini-API`) works around this
+  with `curl_cffi`'s TLS impersonation. PDF analysis is unaffected (it completes
+  in one batched response).
+- Attachments are uploaded via Google's resumable upload protocol
+  (`push.clients6.google.com/upload/`, two-step start → finalize).
+
+## Acknowledgements
+
+This project is inspired by and derived from **[Oracle](https://github.com/steipete/oracle)**
+by [Peter Steinberger](https://github.com/steipete) (@steipete), which pioneered
+the Gemini web (cookie) client this tool ports. The modern request/response
+shapes were cross-referenced with [HanaokaYuzu/Gemini-API](https://github.com/HanaokaYuzu/Gemini-API).
+See [`NOTICE`](./NOTICE) for full attribution. Both upstream projects are MIT
+licensed.
+
+## License
+
+MIT — see [`LICENSE`](./LICENSE).

@@ -1,0 +1,42 @@
+# gemini-firefox
+
+This project is a stripped-down, standalone tool and is **inspired by and
+derived from** the [Oracle](https://github.com/steipete/oracle) CLI by
+Peter Steinberger ([@steipete](https://github.com/steipete)), which is
+licensed under the MIT License.
+
+## Origin & inspiration
+
+The Gemini web (cookie) client and the Firefox cookie-extraction approach
+originated in Oracle's `src/gemini-web/` directory
+([steipete/oracle](https://github.com/steipete/oracle)). This project ports
+the essential, working pieces of that Gemini-web client to a minimal,
+zero-dependency Node script that reads session cookies from Firefox instead
+of Chrome.
+
+Key upstream sources this project builds on:
+
+- **Oracle** (`steipete/oracle`) — the original Gemini web cookie client
+  (`src/gemini-web/client.ts`, `executor.ts`, `models.ts`) and the layered
+  cookie-loader design. MIT licensed, Copyright (c) 2026 Peter Steinberger.
+- The modern Gemini `StreamGenerate` request envelope, the model-selector
+  header format, and the length-prefixed response framing were reverse-
+  engineered against `gemini.google.com`; the current request/response
+  shapes were validated against the live web UI and cross-referenced with
+  the [HanaokaYuzu/Gemini-API](https://github.com/HanaokaYuzu/Gemini-API)
+  reference (also MIT).
+
+## What this project changed / added
+
+- Removed all Chrome/keychain/CDP dependencies — reads Firefox's plaintext
+  `cookies.sqlite` via the built-in `node:sqlite` instead.
+- Added Firefox Multi-Account Container targeting (`--container`).
+- Modernized the internal `gemini.google.com` request protocol (the upstream
+  HTTP client was returning error `1061`; this project refreshes the
+  69/92-element `f.req` payload, the 12/17-element model-selector header,
+  the `cfb2h`/`FdrFJe` session tokens, and `rt=c` streaming).
+- Added the modern two-step resumable upload flow
+  (`push.clients6.google.com/upload/`) for file attachments.
+- Standalone CLI with zero external dependencies (Node built-ins only).
+
+Grateful credit to Peter Steinberger for the original work.
